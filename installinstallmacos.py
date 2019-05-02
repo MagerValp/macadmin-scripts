@@ -25,13 +25,16 @@ empty disk image'''
 from __future__ import print_function
 
 
+from future import standard_library
+standard_library.install_aliases()
+from builtins import input
 import argparse
 import gzip
 import os
 import plistlib
 import subprocess
 import sys
-import urlparse
+import urllib.parse
 import xattr
 from xml.dom import minidom
 from xml.parsers.expat import ExpatError
@@ -57,7 +60,7 @@ def get_seeding_program(sucatalog_url):
     '''Returns a seeding program name based on the sucatalog_url'''
     try:
         seed_catalogs = plistlib.readPlist(SEED_CATALOGS_PLIST)
-        for key, value in seed_catalogs.items():
+        for key, value in list(seed_catalogs.items()):
             if sucatalog_url == value:
                 return key
         return ''
@@ -78,7 +81,7 @@ def get_seeding_programs():
     '''Returns the list of seeding program names'''
     try:
         seed_catalogs = plistlib.readPlist(SEED_CATALOGS_PLIST)
-        return seed_catalogs.keys()
+        return list(seed_catalogs.keys())
     except (OSError, ExpatError, AttributeError, KeyError):
         return ''
 
@@ -192,7 +195,7 @@ def replicate_url(full_url,
     '''Downloads a URL and stores it in the same relative path on our
     filesystem. Returns a path to the replicated file.'''
 
-    path = urlparse.urlsplit(full_url)[2]
+    path = urllib.parse.urlsplit(full_url)[2]
     relative_url = path.lstrip('/')
     relative_url = os.path.normpath(relative_url)
     local_file_path = os.path.join(root_dir, relative_url)
@@ -476,13 +479,13 @@ def main():
             product_info[product_id]['title']
         ))
 
-    answer = raw_input(
+    answer = input(
         '\nChoose a product to download (1-%s): ' % len(product_info))
     try:
         index = int(answer) - 1
         if index < 0:
             raise ValueError
-        product_id = product_info.keys()[index]
+        product_id = list(product_info.keys())[index]
     except (ValueError, IndexError):
         print('Exiting.')
         exit(0)
